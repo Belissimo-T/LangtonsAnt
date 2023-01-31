@@ -22,6 +22,14 @@ class LangtonsAntView(pyglet.window.Window):
             anchor_y="top",
             font_size=16,
         )
+        self.mouse_pos_label = pyglet.text.Label(
+            text=f"Mouse Pos",
+            x=10,
+            y=10,
+            anchor_x="left",
+            anchor_y="bottom",
+            font_size=16,
+        )
 
         self.set_caption("Langton's Ant")
 
@@ -54,6 +62,10 @@ class LangtonsAntView(pyglet.window.Window):
 
         model_pos = self.screen_to_model(x, y)
         self.model.toggle_cell(*model_pos)
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        x, y = self.screen_to_model(x, y)
+        self.mouse_pos_label.text = f"Mouse Pos: {x:.0f} | {y:.0f}"
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -148,6 +160,7 @@ class LangtonsAntView(pyglet.window.Window):
             f"On cells: {len(self.model.grid)}"
         )
         self.info_label.draw()
+        self.mouse_pos_label.draw()
 
         if not self.paused:
             for _ in range(self.speed): self.model.step()
