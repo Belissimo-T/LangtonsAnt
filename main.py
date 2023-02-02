@@ -1,3 +1,5 @@
+import math
+
 import pyglet
 import colorsys
 from langtons_ant_model import LangtonsAntModel
@@ -9,7 +11,8 @@ class LangtonsAntView(pyglet.window.Window):
         super().__init__(resizable=True)
 
         self.model: LangtonsAntModel = model
-        self.view_position: tuple[int, int] = (0, 0)
+        self.view_position: tuple[int, int] = (0, 0)  # model coordinates
+        self.curr_mouse_pos: tuple[float, float] = (0, 0)
         self.pixel_width: float = 10
         self.speed: int = 1
         self.paused: bool = True
@@ -39,7 +42,7 @@ class LangtonsAntView(pyglet.window.Window):
             "==== Langton's Ant Help ====\n"
             " * Left click to toggle cells\n"
             " * Scroll to zoom\n"
-            " * Drag to pan\n"
+            " * Right click drag to pan\n"
             " * Space to pause\n"
             " * Right/Left to change speed\n"
             " * S to step once\n"
@@ -51,10 +54,14 @@ class LangtonsAntView(pyglet.window.Window):
         self.pixel_width = max(0.1, self.pixel_width)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self.curr_mouse_pos = x, y
         if buttons & pyglet.window.mouse.LEFT:
             return
 
-        self.view_position = (self.view_position[0] - dx, self.view_position[1] - dy)
+        self.view_position = (
+            self.view_position[0] + dx / self.pixel_width,
+            self.view_position[1] + dy / self.pixel_width
+        )
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button != pyglet.window.mouse.LEFT:
@@ -63,9 +70,10 @@ class LangtonsAntView(pyglet.window.Window):
         model_pos = self.screen_to_model(x, y)
         self.model.toggle_cell(*model_pos)
 
-    def on_mouse_motion(self, x, y, dx, dy):
-        x, y = self.screen_to_model(x, y)
-        self.mouse_pos_label.text = f"Mouse Pos: {x:.0f} | {y:.0f}"
+    def on_mouse_motion(self, _x, _y, dx, dy):
+        self.curr_mouse_pos = _x, _y
+        x, y = self.screen_to_model(_x, _y)
+        self.mouse_pos_label.text = f"Mouse Pos: {x:.1f} | {y:.1f}"
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
@@ -89,16 +97,16 @@ class LangtonsAntView(pyglet.window.Window):
         self.speed = max(1, self.speed)
 
     def model_to_screen(self, x: int, y: int) -> tuple[float, float]:
-        dx = x * self.pixel_width
-        dy = y * self.pixel_width
-
-        return dx - self.view_position[0] + self.width / 2, dy - self.view_position[1] + self.height / 2
+        return (
+            (x + self.view_position[0]) * self.pixel_width + self.width / 2,
+            (y + self.view_position[1]) * self.pixel_width + self.height / 2
+        )
 
     def screen_to_model(self, x: float, y: float) -> tuple[int, int]:
-        dx = x + self.view_position[0] - self.width / 2
-        dy = y + self.view_position[1] - self.height / 2
-
-        return dx // self.pixel_width, dy // self.pixel_width
+        return (
+            math.floor((x - self.width / 2) / self.pixel_width - self.view_position[0]),
+            math.floor((y - self.height / 2) / self.pixel_width - self.view_position[1])
+        )
 
     def draw_model(self):
         batch = pyglet.graphics.Batch()
@@ -107,7 +115,7 @@ class LangtonsAntView(pyglet.window.Window):
         for x, y in self.model.grid:
             cell = self.model.get_cell(x, y)
             if cell:
-                color = tuple(map(lambda v: int(v * 255), colorsys.hsv_to_rgb(cell / 3 % 256 / 255, 0.5, 1)))
+                color = tuple(map(lambda v: int(v * 255), colorsys.hsv_to_rgb(cell / 20 % 256 / 255, 0.5, 1)))
             else:
                 color = (0, 0, 0)
 
@@ -151,6 +159,16 @@ class LangtonsAntView(pyglet.window.Window):
             color=(0, 255, 0),
         ).draw()
 
+        # draw mouse
+        curr_mouse_screen_pos = self.model_to_screen(*self.screen_to_model(*self.curr_mouse_pos))
+        pyglet.shapes.Rectangle(
+            x=curr_mouse_screen_pos[0],
+            y=curr_mouse_screen_pos[1],
+            width=self.pixel_width,
+            height=self.pixel_width,
+            color=(255, 255, 255, 100),
+        ).draw()
+
         # draw info
         self.info_label.text = (
             f"Generation: {self.model.generation:,d} | "
@@ -158,6 +176,7 @@ class LangtonsAntView(pyglet.window.Window):
             f"Pixel Width: {self.pixel_width:.2f} | "
             f"Paused: {self.paused} | "
             f"On cells: {len(self.model.grid)}"
+            f" | pan: {self.view_position[0]:.1f},{self.view_position[1]:.1f}"
         )
         self.info_label.draw()
         self.mouse_pos_label.draw()
