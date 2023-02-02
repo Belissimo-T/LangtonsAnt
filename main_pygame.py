@@ -103,6 +103,13 @@ class LangtonsAntView(LangtonsAntModelViewBase):
             )
             self.window.blit(info_text, (5, 5))
 
+            curr_model_mouse_pos = self.screen_to_model(*self.curr_mouse_pos)
+            info_text2 = self.font.render(
+                f"Mouse pos: {curr_model_mouse_pos[0]:.0f} | {curr_model_mouse_pos[1]:.0f}",
+                True, (255, 255, 255)
+            )
+            self.window.blit(info_text2, (5, self.height - 5 - info_text2.get_height()))
+
             pygame.display.flip()
             self.clock.tick(120)
 
