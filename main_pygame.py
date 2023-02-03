@@ -7,7 +7,7 @@ class LangtonsAntView(LangtonsAntModelViewBase):
     def __init__(self):
         self.window = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
         pygame.display.set_caption("Langton's Ant")
-        self.single_surface_dimension = 100
+        self.single_surface_dimension = 25
         self.surfaces: dict[tuple[int, int], pygame.Surface] = {}
         self.mouse_button_down = False
         self.curr_mouse_pos: tuple[int, int] = (0, 0)
@@ -56,7 +56,7 @@ class LangtonsAntView(LangtonsAntModelViewBase):
                     if event.key == pygame.K_SPACE:
                         self.paused = not self.paused
                     if event.key == pygame.K_r:
-                        self.model = LangtonsAntModel()
+                        self.model = LangtonsAntModel(grid_changed_callback=self.set_surface_pixel)
                         self.surfaces = {}
                     if event.key == pygame.K_RIGHT:
                         self.speed += 1
@@ -109,7 +109,7 @@ class LangtonsAntView(LangtonsAntModelViewBase):
 
             # draw info
             info_text = self.font.render(
-                self.get_info_text() + f" | Pages: {len(self.surfaces)}",
+                self.get_info_text() + f" | Pages: {len(self.surfaces):,d}",
                 True, (255, 255, 255)
             )
             self.window.blit(info_text, (5, 5))
@@ -125,14 +125,14 @@ class LangtonsAntView(LangtonsAntModelViewBase):
             self.clock.tick(120)
 
     def set_surface_pixel(self, model_pos: tuple[int, int], state: int):
-        self.view_position = -self.model.x, -self.model.y
+        # self.view_position = -self.model.x, -self.model.y
 
         surface_pos = (model_pos[0] // self.single_surface_dimension,
                        model_pos[1] // self.single_surface_dimension)
 
         if surface_pos not in self.surfaces:
             self.surfaces[surface_pos] = pygame.Surface((self.single_surface_dimension,) * 2)
-            self.surfaces[surface_pos].fill((0, 0, 255))
+            self.surfaces[surface_pos].fill((0, 0, 20))
 
         surface = self.surfaces[surface_pos]
 

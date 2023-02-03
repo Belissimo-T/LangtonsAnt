@@ -112,5 +112,5 @@ class LangtonsAntModelViewBase:
             f"Speed: {self.speed} | "
             f"Pixel Width: {self.pixel_width:.2f} | "
             f"Paused: {self.paused} | "
-            f"Active Cells: {len(self.model.grid)}"
+            f"Active Cells: {len(self.model.grid):,d}"
         )
