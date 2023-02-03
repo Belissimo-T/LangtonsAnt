@@ -1,14 +1,13 @@
 from langtons_ant_model import *
 
 import pygame
-import math
 
 
 class LangtonsAntView(LangtonsAntModelViewBase):
     def __init__(self):
         self.window = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
         pygame.display.set_caption("Langton's Ant")
-        self.single_surface_dimension = 10
+        self.single_surface_dimension = 100
         self.surfaces: dict[tuple[int, int], pygame.Surface] = {}
         self.mouse_button_down = False
         self.curr_mouse_pos: tuple[int, int] = (0, 0)
@@ -51,6 +50,8 @@ class LangtonsAntView(LangtonsAntModelViewBase):
                     self.curr_mouse_pos = event.pos
                     if self.mouse_button_down and event.buttons[2]:
                         self.pan(*event.rel)
+                    if pygame.mouse.get_pressed()[0]:
+                        self.model.set_cell(*self.screen_to_model(*event.pos), self.model.generation)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.paused = not self.paused
@@ -62,8 +63,18 @@ class LangtonsAntView(LangtonsAntModelViewBase):
                     if event.key == pygame.K_LEFT:
                         self.speed -= 1
                         self.speed = max(self.speed, 1)
-                    if event.key == pygame.K_s:
+                    if event.key == pygame.K_x:
                         self.model.step()
+            # pygame.key.set_repeat(0, 1)
+            pressed_keys = pygame.key.get_pressed()
+            if pressed_keys[pygame.K_w]:
+                self.pan(0, 10)
+            if pressed_keys[pygame.K_s]:
+                self.pan(0, -10)
+            if pressed_keys[pygame.K_d]:
+                self.pan(-10, 0)
+            if pressed_keys[pygame.K_a]:
+                self.pan(10, 0)
 
             if not self.paused:
                 for _ in range(self.speed):
@@ -114,12 +125,14 @@ class LangtonsAntView(LangtonsAntModelViewBase):
             self.clock.tick(120)
 
     def set_surface_pixel(self, model_pos: tuple[int, int], state: int):
+        self.view_position = -self.model.x, -self.model.y
+
         surface_pos = (model_pos[0] // self.single_surface_dimension,
                        model_pos[1] // self.single_surface_dimension)
 
         if surface_pos not in self.surfaces:
             self.surfaces[surface_pos] = pygame.Surface((self.single_surface_dimension,) * 2)
-            # self.surfaces[surface_pos].fill((0, 255, 0))
+            self.surfaces[surface_pos].fill((0, 0, 255))
 
         surface = self.surfaces[surface_pos]
 
