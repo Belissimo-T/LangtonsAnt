@@ -7,7 +7,7 @@ class LangtonsAntView(LangtonsAntModelViewBase):
     def __init__(self):
         self.window = pygame.display.set_mode((800, 450), pygame.RESIZABLE)
         pygame.display.set_caption("Langton's Ant")
-        self.single_surface_dimension = 25
+        self.single_surface_dimension = 15
         self.surfaces: dict[tuple[int, int], pygame.Surface] = {}
         self.mouse_button_down = False
         self.curr_mouse_pos: tuple[int, int] = (0, 0)
@@ -156,9 +156,25 @@ class LangtonsAntView(LangtonsAntModelViewBase):
             pygame.transform.scale(surface, out_surface.get_size(), out_surface)
             self.window.blit(out_surface, screen_coords)
 
+    @staticmethod
+    def get_help() -> str:
+        return (
+            "==== Langton's Ant Help ====\n"
+            " * Left click to toggle cells\n"
+            " * Left click drag to turn on cells\n"
+            " * Scroll to zoom\n"
+            " * Right click drag or W/A/S/D to pan\n"
+            " * Space to pause\n"
+            " * Right/Left to change speed\n"
+            " * X to step once\n"
+            " * R to reset\n"
+        )
+
 
 def main():
     LangtonsAntView.init()
+    print(LangtonsAntView.get_help())
+
     view = LangtonsAntView()
     view.mainloop()
 
